@@ -1,0 +1,4 @@
+interface:
+  display_name: "定时任务"
+  short_description: "通过对话创建、查询、修改并管理当前飞书会话中的持久化定时任务"
+  default_prompt: "Use $scheduled-task to create or manage a scheduled task for this Feishu conversation."

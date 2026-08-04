@@ -1,0 +1,27 @@
+{
+  "feishu": {
+    "app_id": "${FEISHU_APP_ID}",
+    "app_secret": "${FEISHU_APP_SECRET}"
+  },
+  "engines": {
+    "codex": {
+      "command": "codex --model {codex_model} --dangerously-bypass-approvals-and-sandbox --dangerously-bypass-hook-trust",
+      "continue_flag": ""
+    }
+  },
+  "cold_start_wait_sec": 6,
+  "feishu_ws_reconnect_interval_sec": 10,
+  "feishu_ws_reconnect_nonce_sec": 3,
+  "scheduler_poll_sec": 2,
+  "scheduler_max_workers": 2,
+  "scheduler_task_timeout_sec": 1800,
+  "codex_reply_timeout_sec": 7200,
+  "hub_reconcile_interval_sec": 30,
+  "routing": {
+    "auto_create": true
+  },
+  "bitable": {
+    "app_token": "${FEISHU_BITABLE_APP_TOKEN}",
+    "table_id": "${FEISHU_BITABLE_TABLE_ID}"
+  }
+}

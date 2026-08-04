@@ -1,0 +1,36 @@
+name: Bug 报告
+description: 报告可复现的问题；请勿提交任何凭证或聊天数据
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先删除 App ID、App Secret、Token、群/用户 ID、本机路径、聊天正文和附件内容。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题描述
+      description: 说明预期行为和实际行为，不要粘贴未脱敏日志。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 环境
+      description: 操作系统、Python、Codex CLI 版本；不要填写用户名或绝对路径。
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 隐私确认
+      options:
+        - label: 我已确认内容中不包含凭证、真实飞书 ID、聊天正文、附件或本机个人路径。
+          required: true

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill / MCP 生命周期"
+  short_description: "通过对话创建、验证并发布专用或通用资源"
+  default_prompt: "Use $hub-publish to create and validate a dedicated resource, then publish it only if I explicitly request a general version."

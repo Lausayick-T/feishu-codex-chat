@@ -1,0 +1,63 @@
+# 本机凭证与配置
+.env
+.env.*
+!.env.example
+.mcp.json
+registry.json
+
+# 编辑器、操作系统与本机 Agent 配置
+.DS_Store
+.idea/
+.vscode/
+.claude/
+.codex/
+.catalysthub/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 运行状态、日志和数据库
+state/
+*.log
+*.jsonl
+*.pid
+*.lock
+!uv.lock
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# 所有飞书会话工作区均为本机数据，只保留空模板目录
+bots/*
+!bots/_template/
+!bots/_template/.gitkeep
+
+# 会话数据的纵深保护；即使目录被移动也不提交
+**/incoming/
+**/memory/
+**/workspace/
+**/scheduled_tasks/
+
+# MCP 配置和非内置 Skill 属于本机 Hub，不进入公开源码
+hub/mcp/*.json
+hub/skills/*
+!hub/skills/chat-agent-maintenance/
+!hub/skills/chat-agent-maintenance/**
+!hub/skills/feishu-send/
+!hub/skills/feishu-send/**
+!hub/skills/hub-publish/
+!hub/skills/hub-publish/**
+!hub/skills/scheduled-task/
+!hub/skills/scheduled-task/**
+hub/skills/**/__pycache__/
+hub/skills/**/*.pyc
+
+# Hub 可独立维护；公开仓库只收录它的工作树，不收录嵌套 Git 元数据
+hub/.git/

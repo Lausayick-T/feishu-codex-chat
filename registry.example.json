@@ -1,0 +1,4 @@
+{
+  "_comment": "chat_id -> bots/ 下的工作目录名。首次收到新群消息时可自动写入本机 registry.json。",
+  "chats": {}
+}

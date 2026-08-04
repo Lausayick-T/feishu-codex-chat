@@ -1,0 +1,4 @@
+interface:
+  display_name: "Chat Agent 维护"
+  short_description: "维护飞书 Codex 会话目录、资源和运行配置"
+  default_prompt: "Use $chat-agent-maintenance to inspect or maintain this Feishu Codex session safely."

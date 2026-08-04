@@ -1,0 +1,4 @@
+interface:
+  display_name: "飞书发送"
+  short_description: "主动发送用户指定文件及新生成的文件型交付物"
+  default_prompt: "Use $feishu-send to send the requested or newly generated artifact, then reply according to its concise summary rules."

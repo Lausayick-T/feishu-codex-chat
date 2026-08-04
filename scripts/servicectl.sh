@@ -682,7 +682,6 @@ render_autostart() {
 }
 
 autostart_install_macos() {
-  command -v launchctl >/dev/null 2>&1 || die "未找到 launchctl"
   local launch_agents="${CHAT_AGENT_AUTOSTART_DIR:-$HOME/Library/LaunchAgents}"
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
@@ -692,6 +691,7 @@ autostart_install_macos() {
     return 0
   fi
 
+  command -v launchctl >/dev/null 2>&1 || die "未找到 launchctl"
   mkdir -p "$launch_agents"
   render_autostart macos "$launch_agents"
 
@@ -720,7 +720,6 @@ autostart_uninstall_macos() {
 }
 
 autostart_install_linux() {
-  command -v systemctl >/dev/null 2>&1 || die "未找到 systemctl"
   local unit_dir="${CHAT_AGENT_AUTOSTART_DIR:-$HOME/.config/systemd/user}"
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
@@ -730,6 +729,7 @@ autostart_install_linux() {
     return 0
   fi
 
+  command -v systemctl >/dev/null 2>&1 || die "未找到 systemctl"
   mkdir -p "$unit_dir"
   render_autostart linux "$unit_dir"
   systemctl --user daemon-reload

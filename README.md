@@ -1,55 +1,22 @@
 # Feishu Codex Chat
 
-将飞书群聊或私聊连接到 Codex CLI。每个飞书会话拥有独立工作目录、常驻 tmux 会话、配置、记忆、附件和定时任务，并可按需装载共享 Skill 与 MCP。
+把飞书私聊或群聊接入 Codex CLI。每个飞书会话都有独立的工作目录、Codex 会话、附件、记忆与定时任务；公开仓库不包含任何个人会话、MCP 配置或真实凭证。
 
-## 功能
+> 第一次部署请直接阅读 **[从零部署指南](docs/deployment.md)**。它按实际操作顺序覆盖依赖安装、Codex 登录、飞书应用创建、权限、长连接、启动和验收。
 
-- 飞书长连接接收消息，无需公网回调服务器。
-- 按 `chat_id` 隔离多个 Agent 工作区。
-- 支持文本、富文本、图片、文件、媒体和音频。
-- 单真人群直接回复，多人群仅响应 `@机器人`。
-- 飞书交互卡片展示启动、执行、停止和最终结果。
-- 首次使用引导、运行状态诊断和本机会话数据管理。
-- 每个群独立选择 Codex 模型与 reasoning effort。
-- 摘要记忆、Skill/MCP Hub、主动发送文件和交互式澄清问题。
-- SQLite 持久化定时任务，支持一次性、间隔、每日、星期和五段 Cron。
-- macOS LaunchAgent、Linux systemd user、tmux、nohup 和前台运行。
+## 适用环境
 
-公开版本不附带或默认启用任何 MCP，`.env.example` 只保留本项目运行所需的飞书配置。个人 MCP、非内置 Skill 和各会话数据仅保存在本机，并由 `.gitignore` 阻止提交。
+| 项目 | 要求 |
+|---|---|
+| 操作系统 | macOS 或 Linux；不支持原生 Windows |
+| Python | 3.10 或更高版本 |
+| 运行依赖 | `uv`、`tmux`、Git、Codex CLI |
+| 飞书 | 可创建企业自建应用，并能发布或请管理员审核 |
+| Codex | 运行服务的系统账户已完成 `codex login` |
 
-## 架构
+部署后的机器需要持续在线，并能访问飞书开放平台与 Codex 使用的网络服务。
 
-```text
-飞书消息 / 卡片回调
-        │
-        ▼
-     server.py
-        │ chat_id → registry.json
-        ▼
- bots/<conversation>/
-        │ tmux + bracketed paste
-        ▼
-   Codex 交互式 TUI
-        │ ~/.codex/sessions/*.jsonl
-        ▼
- 进度卡刷新与最终回复
-
-定时任务 → scheduler.db → codex exec --ephemeral → 飞书
-```
-
-核心代码：
-
-- `server.py`：飞书事件入口与流程编排。
-- `utils/session.py`：tmux 与 Codex 生命周期。
-- `utils/workers.py`：进度和终稿捕获。
-- `utils/hub.py`：Skill/MCP 安装、同步和发布。
-- `utils/scheduled.py`：任务存储与调度计算。
-- `scheduler_service.py`：无人值守任务执行器。
-- `scripts/servicectl.sh`：统一服务管理。
-
-## 快速开始
-
-要求：Python 3.10+、[uv](https://docs.astral.sh/uv/)、tmux，以及已安装并登录的 Codex CLI。
+## 最短部署路径
 
 ```bash
 git clone https://github.com/Lausayick-T/feishu-codex-chat.git
@@ -59,57 +26,93 @@ cp .env.example .env
 chmod 600 .env
 ```
 
-填写 `.env` 中的 `FEISHU_APP_ID` 与 `FEISHU_APP_SECRET`，然后按飞书文档创建应用、配置权限和长连接事件。
-
-启动前先运行诊断；如暂时无法访问飞书开放平台，可添加 `--offline`：
+在 `.env` 中填写飞书应用的 `FEISHU_APP_ID` 和 `FEISHU_APP_SECRET`，然后执行：
 
 ```bash
 ./start.sh doctor
-```
-
-```bash
-# 前台运行 Server 与 Scheduler，Ctrl-C 一起停止
-./start.sh
-
-# 或使用统一 tmux 服务
 ./start.sh tmux start
 ./start.sh tmux status
 ./start.sh tmux logs
 ```
 
-首次收到新会话消息时，系统会创建 `bots/auto_<chat_id>/` 并写入本机 `registry.json`。这两类文件都不会提交到 Git。
+这几条命令只是本机部分。飞书后台还必须完成机器人能力、API 权限、消息事件、卡片回调和版本发布；请不要跳过[完整部署流程](docs/deployment.md)。
 
-在飞书中可随时发送：
+## 功能
 
-- `/help`：打开控制面板。
-- `/status`：查看飞书链路、Codex 会话、调度服务和资源状态。
-- `/privacy`：查看或清理当前会话的记忆、附件、生成文件和任务日志。
+- 飞书长连接接收消息，无需公网回调服务器。
+- 按 `chat_id` 隔离多个 Agent 工作区。
+- 支持文本、富文本、图片、文件、媒体和音频。
+- 单真人群直接回复；多人群仅响应 `@机器人`。
+- 交互卡片展示启动、执行、停止和最终结果。
+- 每个群独立选择 Codex 模型与 reasoning effort。
+- 摘要记忆、Skill/MCP Hub、主动发送文件和交互式澄清问题。
+- SQLite 持久化定时任务，支持一次性、间隔、每日、每周和 Cron。
+- 支持前台、tmux、nohup、macOS LaunchAgent 和 Linux systemd user。
 
-## 文档
+## 使用入口
 
-- [环境与配置](docs/configuration.md)
-- [消息、附件与数据处理](docs/data-flow.md)
-- [飞书应用操作流程](docs/feishu-setup.md)
-- [飞书权限清单](docs/feishu-permissions.md)
-- [安全与隐私](docs/security.md)
-- [运行与维护](docs/operations.md)
+在飞书中发送：
 
-## 测试
+| 命令 | 作用 |
+|---|---|
+| `/help` | 打开控制面板 |
+| `/status` | 检查飞书链路、Codex、调度器和资源状态 |
+| `/privacy` | 查看或清理当前会话的本地数据 |
+| `/sync` | 手动同步可选的多维表格控制台 |
+
+## 架构
+
+```text
+飞书消息 / 卡片回调
+        │ 长连接
+        ▼
+     server.py ── chat_id → registry.json
+        │
+        ▼
+ bots/auto_<chat_id>/ ── tmux ── Codex TUI
+        │
+        └── 附件、记忆、产物、任务日志（仅本机）
+
+scheduler_service.py ── scheduler.db ── codex exec ── 飞书
+```
+
+核心代码：
+
+- `server.py`：飞书事件与卡片回调入口。
+- `utils/session.py`：tmux 与 Codex 会话生命周期。
+- `utils/workers.py`：进度卡和最终回复捕获。
+- `utils/hub.py`：本机 Skill/MCP 装载与同步。
+- `scheduler_service.py`：无人值守定时任务执行器。
+- `scripts/servicectl.sh`：统一启动、停止和日志管理。
+
+## 文档导航
+
+建议按以下顺序阅读：
+
+1. [从零部署指南](docs/deployment.md)：第一次安装的唯一主流程。
+2. [飞书应用配置](docs/feishu-setup.md)：飞书后台逐页操作。
+3. [飞书权限、事件与回调清单](docs/feishu-permissions.md)：按功能选择权限。
+4. [环境变量与运行配置](docs/configuration.md)：配置项参考。
+5. [故障排查](docs/troubleshooting.md)：按现象定位问题。
+6. [运行与维护](docs/operations.md)：日常启停、自启动、备份和升级。
+7. [消息、附件与数据处理](docs/data-flow.md)：数据如何流转和保留。
+8. [安全与隐私](docs/security.md)：权限边界和公开发布检查。
+
+## 安全边界
+
+- `.env.example` 只有空字段；真实凭证必须写入被 Git 忽略的 `.env` 或进程环境。
+- `.env`、`registry.json`、`.mcp.json`、`state/`、`bots/*`、个人 MCP、非内置 Skill、日志和数据库均不会提交。
+- 默认 Codex 命令启用了跳过审批和沙箱的无人值守模式。只应使用专用低权限系统账户，并确保它不能读取 SSH 私钥、浏览器数据或其他业务凭证。
+- 公开提交前运行 `uv run python scripts/audit_public.py`；如果凭证曾进入 Git 历史，仅删除文件不够，必须立即轮换。
+
+详细说明见[安全与隐私](docs/security.md)。项目采用 [MIT License](LICENSE)，参与开发前请阅读[贡献指南](CONTRIBUTING.md)。
+
+## 开发验证
 
 ```bash
 uv sync --locked
 uv run python -m unittest discover -s tests -v
-uv run python -m py_compile server.py scheduler_service.py hub_cli.py utils/*.py scripts/*.py
+uv run python -m compileall -q server.py scheduler_service.py hub_cli.py utils scripts
+uv run python scripts/check_docs.py
 uv run python scripts/audit_public.py
 ```
-
-## 安全提醒
-
-- 真实凭证只放在 `.env` 或进程环境中，不要写入 JSON、Skill、MCP 配置或日志。
-- `.env`、`registry.json`、`.mcp.json`、`state/`、整个 `bots/*` 会话目录、个人 Hub 资源和各类日志均被 Git 忽略。
-- Codex 默认使用跳过审批与沙箱的参数。只应在专用低权限账户和受控工作目录中运行。
-- 如果凭证曾进入 Git 历史或公开日志，仅删除文件不够，必须立即轮换凭证。
-
-项目目前以内部自托管场景为目标。部署到共享服务器前，请先阅读[安全与隐私](docs/security.md)。
-
-项目采用 [MIT License](LICENSE)。参与开发前请阅读[贡献指南](CONTRIBUTING.md)和[版本记录](CHANGELOG.md)。

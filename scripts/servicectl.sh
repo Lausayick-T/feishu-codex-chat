@@ -18,8 +18,10 @@ SERVICE_SCRIPTS=("$SERVER_SCRIPT" "$SCHEDULER_SCRIPT")
 
 MACOS_LABEL="io.github.feishu-codex-chat"
 LINUX_UNIT="feishu-codex-chat.service"
-LEGACY_MACOS_LABELS=()
-LEGACY_LINUX_UNITS=()
+# Bash 3.2（macOS 系统自带版本）在 set -u 下展开空数组会报错。
+# 保留一个空哨兵，并在所有使用点跳过它，兼容新旧 Bash。
+LEGACY_MACOS_LABELS=("")
+LEGACY_LINUX_UNITS=("")
 LEGACY_TMUX_SESSIONS=(
   feishu-server
   chat-agent-server
@@ -222,6 +224,7 @@ autostart_service_active() {
   if [[ "$platform" == "macos" ]]; then
     local label
     for label in "$MACOS_LABEL" "${LEGACY_MACOS_LABELS[@]}"; do
+      [[ -n "$label" ]] || continue
       if launchctl print "gui/$(id -u)/$label" >/dev/null 2>&1; then
         return 0
       fi
@@ -230,6 +233,7 @@ autostart_service_active() {
     command -v systemctl >/dev/null 2>&1 || return 1
     local unit
     for unit in "$LINUX_UNIT" "${LEGACY_LINUX_UNITS[@]}"; do
+      [[ -n "$unit" ]] || continue
       if systemctl --user is-enabled --quiet "$unit"; then
         return 0
       fi
@@ -758,6 +762,7 @@ cleanup_legacy_autostart() {
     local launch_agents="${CHAT_AGENT_AUTOSTART_DIR:-$HOME/Library/LaunchAgents}"
     local domain="gui/$(id -u)"
     for item in "${LEGACY_MACOS_LABELS[@]}"; do
+      [[ -n "$item" ]] || continue
       if [[ "$DRY_RUN" -eq 1 ]]; then
         log "[dry-run] 清理旧 LaunchAgent：$item"
       else
@@ -768,11 +773,15 @@ cleanup_legacy_autostart() {
   else
     local unit_dir="${CHAT_AGENT_AUTOSTART_DIR:-$HOME/.config/systemd/user}"
     if [[ "$DRY_RUN" -eq 1 ]]; then
-      log "[dry-run] 清理旧 systemd units：${LEGACY_LINUX_UNITS[*]}"
+      for item in "${LEGACY_LINUX_UNITS[@]}"; do
+        [[ -n "$item" ]] || continue
+        log "[dry-run] 清理旧 systemd unit：$item"
+      done
       return 0
     fi
-    systemctl --user disable --now "${LEGACY_LINUX_UNITS[@]}" >/dev/null 2>&1 || true
     for item in "${LEGACY_LINUX_UNITS[@]}"; do
+      [[ -n "$item" ]] || continue
+      systemctl --user disable --now "$item" >/dev/null 2>&1 || true
       rm -f "$unit_dir/$item"
     done
     systemctl --user daemon-reload

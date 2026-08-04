@@ -114,6 +114,12 @@ class ServiceControllerTests(unittest.TestCase):
         self.assertEqual(len(list(macos.iterdir())), 1)
         self.assertEqual(len(list(linux.iterdir())), 1)
 
+    def test_autostart_dry_run_handles_empty_legacy_lists(self) -> None:
+        completed = self.run_ctl("--dry-run", "autostart", "install")
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("LaunchAgent", completed.stdout)
+
     def test_doctor_reports_ready_offline_environment(self) -> None:
         bin_dir = self.root / "bin"
         bin_dir.mkdir()

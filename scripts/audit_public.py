@@ -96,15 +96,27 @@ def main() -> int:
     findings: set[tuple[str, str, str, int]] = set()
     local_values = _dotenv_values()
 
-    for commit in commits:
-        paths = _git("ls-tree", "-r", "--name-only", commit).splitlines()
+    worktree_paths = _git(
+        "ls-files", "--cached", "--others", "--exclude-standard"
+    ).splitlines()
+    targets: list[tuple[str, list[str]]] = [("WORKTREE", worktree_paths)]
+    targets.extend(
+        (commit, _git("ls-tree", "-r", "--name-only", commit).splitlines())
+        for commit in commits
+    )
+
+    for commit, paths in targets:
         for path in paths:
             blocked = _blocked_path(path)
             if blocked:
                 findings.add((blocked, commit[:7], path, 0))
             try:
-                data = _git("show", f"{commit}:{path}", binary=True)
-            except subprocess.CalledProcessError:
+                data = (
+                    (ROOT / path).read_bytes()
+                    if commit == "WORKTREE"
+                    else _git("show", f"{commit}:{path}", binary=True)
+                )
+            except (OSError, subprocess.CalledProcessError):
                 continue
             if b"\0" in data:
                 findings.add(("binary file", commit[:7], path, 0))
@@ -144,7 +156,7 @@ def main() -> int:
         return 1
 
     print(
-        f"公开发布审计通过：扫描 {len(commits)} 个提交；"
+        f"公开发布审计通过：扫描当前工作树和 {len(commits)} 个提交；"
         f"比对本机敏感值 {len(local_values)} 项；未发现会话数据、个人资源或凭证。"
     )
     return 0
